@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TechLab — Sistema de Gestión</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Courier New', monospace;
+    background: #0d1117;
+    color: #c9d1d9;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* HEADER */
+  header {
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  header h1 {
+    font-size: 1.1rem;
+    color: #58a6ff;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  header span {
+    color: #3fb950;
+    font-size: 0.8rem;
+  }
+
+  /* LAYOUT */
+  .layout {
+    display: flex;
+    flex: 1;
+    min-height: calc(100vh - 57px);
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 240px;
+    background: #161b22;
+    border-right: 1px solid #30363d;
+    padding: 24px 0;
+    flex-shrink: 0;
+  }
+  .sidebar-title {
+    font-size: 0.7rem;
+    color: #8b949e;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 0 20px 12px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    color: #8b949e;
+    font-size: 0.85rem;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+  }
+  .nav-item:hover { color: #c9d1d9; background: #1c2128; }
+  .nav-item.active { color: #58a6ff; border-left-color: #58a6ff; background: #1c2128; }
+  .nav-item .icon { font-size: 1rem; width: 20px; text-align: center; }
+  .nav-divider { border-top: 1px solid #30363d; margin: 12px 0; }
+
+  /* MAIN */
+  .main {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+  }
+
+  /* PANEL */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .panel-title {
+    font-size: 1.3rem;
+    color: #e6edf3;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .panel-subtitle {
+    color: #8b949e;
+    font-size: 0.8rem;
+    margin-bottom: 28px;
+    font-family: sans-serif;
+  }
+
+  /* TERMINAL MENU */
+  .terminal {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  .terminal-header {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-red { background: #ff5f57; }
+  .dot-yellow { background: #febc2e; }
+  .dot-green { background: #28c840; }
+  .terminal-body { font-size: 0.85rem; line-height: 2; }
+  .t-green { color: #3fb950; }
+  .t-blue { color: #58a6ff; }
+  .t-yellow { color: #e3b341; }
+  .t-gray { color: #8b949e; }
+  .t-white { color: #e6edf3; }
+
+  /* BUTTONS */
+  .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+  .btn {
+    padding: 8px 16px;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    background: #21262d;
+    color: #c9d1d9;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-family: 'Courier New', monospace;
+    transition: all 0.2s;
+  }
+  .btn:hover { background: #30363d; color: #e6edf3; }
+  .btn-primary { background: #238636; border-color: #2ea043; color: #fff; }
+  .btn-primary:hover { background: #2ea043; }
+  .btn-danger { background: #b91c1c; border-color: #dc2626; color: #fff; }
+  .btn-danger:hover { background: #dc2626; }
+  .btn-blue { background: #1d4ed8; border-color: #2563eb; color: #fff; }
+  .btn-blue:hover { background: #2563eb; }
+
+  /* FORM */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 0.75rem; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; }
+  input, select, textarea {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    color: #c9d1d9;
+    padding: 8px 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #58a6ff;
+  }
+  textarea { resize: vertical; min-height: 80px; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  th {
+    background: #161b22;
+    color: #8b949e;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid #30363d;
+  }
+  td { padding: 10px 14px; border-bottom: 1px solid #21262d; color: #c9d1d9; }
+  tr:hover td { background: #161b22; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: bold;
+  }
+  .badge-green { background: #033a16; color: #3fb950; border: 1px solid #238636; }
+  .badge-yellow { background: #3a2a00; color: #e3b341; border: 1px solid #9e6a03; }
+  .badge-red { background: #3a0000; color: #f85149; border: 1px solid #b91c1c; }
+  .badge-blue { background: #031d4a; color: #58a6ff; border: 1px solid #1d4ed8; }
+
+  /* RESPONSE BOX */
+  .response-box {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 16px;
+    margin-top: 16px;
+    font-size: 0.8rem;
+    white-space: pre-wrap;
+    max-height: 300px;
+    overflow-y: auto;
+    display: none;
+  }
+  .response-box.show { display: block; }
+  .response-ok { border-color: #238636; color: #3fb950; }
+  .response-err { border-color: #b91c1c; color: #f85149; }
+
+  /* CARRITO */
+  .carrito-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    margin-bottom: 8px;
+  }
+  .carrito-item-name { color: #e6edf3; font-size: 0.9rem; }
+  .carrito-item-info { color: #8b949e; font-size: 0.75rem; }
+  .carrito-total {
+    text-align: right;
+    font-size: 1.1rem;
+    color: #3fb950;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #30363d;
+  }
+
+  /* ALERT */
+  .alert {
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    margin-bottom: 16px;
+    display: none;
+    font-family: sans-serif;
+  }
+  .alert.show { display: block; }
+  .alert-success { background: #033a16; border: 1px solid #238636; color: #3fb950; }
+  .alert-error { background: #3a0000; border: 1px solid #b91c1c; color: #f85149; }
+
+  /* LOADING */
+  .loading { color: #8b949e; font-size: 0.82rem; padding: 20px 0; }
+
+  /* PEDIDO FORM */
+  .pedido-item-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .pedido-item-row select { flex: 1; }
+  .pedido-item-row input { width: 80px; }
+
+  .section-divider {
+    border: none;
+    border-top: 1px solid #30363d;
+    margin: 24px 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚙ TechLab</h1>
+  <span>● Sistema de Gestión E-Commerce</span>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-title">Menú Principal</div>
+    <div class="nav-item active" onclick="showPanel('home')">
+      <span class="icon">🏠</span> Inicio
+    </div>
+    <div class="nav-item" onclick="showPanel('productos')">
+      <span class="icon">📦</span> Gestionar Productos
+    </div>
+    <div class="nav-item" onclick="showPanel('categorias')">
+      <span class="icon">🏷️</span> Gestionar Categorías
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-item" onclick="showPanel('carrito')">
+      <span class="icon">🛒</span> Ver Carrito
+    </div>
+    <div class="nav-item" onclick="showPanel('pedidos')">
+      <span class="icon">📋</span> Realizar Pedido
+    </div>
+    <div class="nav-item" onclick="showPanel('historial')">
+      <span class="icon">📜</span> Historial de Pedidos
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-item" onclick="showPanel('admin')">
+      <span class="icon">⚙️</span> Administración
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- HOME -->
+    <div id="panel-home" class="panel active">
+      <div class="panel-title">🏠 Sistema de Gestión — TechLab</div>
+      <div class="panel-subtitle">API REST con Spring Boot + MySQL corriendo en localhost:8080</div>
+      <div class="terminal">
+        <div class="terminal-header">
+          <div class="dot dot-red"></div>
+          <div class="dot dot-yellow"></div>
+          <div class="dot dot-green"></div>
+        </div>
+        <div class="terminal-body">
+          <div><span class="t-green">================================</span></div>
+          <div><span class="t-yellow">  === SISTEMA DE GESTIÓN - TECHLAB ===</span></div>
+          <div><span class="t-green">================================</span></div>
+          <div>&nbsp;</div>
+          <div><span class="t-blue">1)</span> <span class="t-white">Gestionar Productos</span></div>
+          <div><span class="t-blue">2)</span> <span class="t-white">Gestionar Categorías</span></div>
+          <div><span class="t-blue">3)</span> <span class="t-white">Ver Carrito de Compras</span></div>
+          <div><span class="t-blue">4)</span> <span class="t-white">Realizar Pedido</span></div>
+          <div><span class="t-blue">5)</span> <span class="t-white">Consultar Historial de Pedidos</span></div>
+          <div><span class="t-blue">6)</span> <span class="t-white">Administración (usuarios y stock)</span></div>
+          <div><span class="t-blue">7)</span> <span class="t-white">Salir</span></div>
+          <div>&nbsp;</div>
+          <div><span class="t-green">$</span> <span class="t-gray">Seleccioná una opción del menú lateral →</span></div>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="checkApi()">▶ Verificar conexión con API</button>
+      </div>
+      <div id="api-status" class="response-box"></div>
+    </div>
+
+    <!-- PRODUCTOS -->
+    <div id="panel-productos" class="panel">
+      <div class="panel-title">📦 Gestión de Productos</div>
+      <div class="panel-subtitle">CRUD completo — GET · POST · PUT · DELETE /api/productos</div>
+
+      <div class="terminal">
+        <div class="terminal-header">
+          <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+        </div>
+        <div class="terminal-body">
+          <div><span class="t-blue">a)</span> Agregar Producto &nbsp;&nbsp;
+               <span class="t-blue">b)</span> Listar Productos &nbsp;&nbsp;
+               <span class="t-blue">c)</span> Buscar por ID</div>
+          <div><span class="t-blue">d)</span> Actualizar Producto &nbsp;
+               <span class="t-blue">e)</span> Eliminar Producto</div>
+        </div>
+      </div>
+
+      <div id="alert-productos" class="alert"></div>
+
+      <!-- Listar / Buscar -->
+      <div style="display:flex; gap:10px; margin-bottom:16px; align-items:center;">
+        <button class="btn btn-blue" onclick="listarProductos()">b) Listar todos</button>
+        <input id="buscar-id" type="number" placeholder="ID del producto" style="width:160px;">
+        <button class="btn" onclick="buscarProductoPorId()">c) Buscar por ID</button>
+        <input id="buscar-nombre" type="text" placeholder="Nombre..." style="width:160px;">
+        <button class="btn" onclick="buscarPorNombre()">🔍 Buscar</button>
+      </div>
+
+      <div id="tabla-productos" class="table-wrap" style="margin-bottom:24px;"></div>
+
+      <hr class="section-divider">
+
+      <!-- Formulario agregar/actualizar -->
+      <div class="panel-title" style="font-size:1rem; margin-bottom:16px;">
+        <span id="form-productos-titulo">a) Agregar Producto</span>
+      </div>
+      <div class="form-grid">
+        <input type="hidden" id="prod-id">
+        <div class="form-group">
+          <label>Nombre</label>
+          <input id="prod-nombre" type="text" placeholder="Ej: Mouse Logitech">
+        </div>
+        <div class="form-group">
+          <label>Precio</label>
+          <input id="prod-precio" type="number" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group full">
+          <label>Descripción</label>
+          <textarea id="prod-descripcion" placeholder="Descripción del producto..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Stock</label>
+          <input id="prod-stock" type="number" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>Imagen URL</label>
+          <input id="prod-imagen" type="text" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label>Categoría ID</label>
+          <input id="prod-categoria" type="number" placeholder="1">
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="guardarProducto()">💾 Guardar</button>
+        <button class="btn" onclick="limpiarFormProducto()">✖ Limpiar</button>
+      </div>
+    </div>
+
+    <!-- CATEGORIAS -->
+    <div id="panel-categorias" class="panel">
+      <div class="panel-title">🏷️ Gestión de Categorías</div>
+      <div class="panel-subtitle">GET /api/categorias — listado de categorías disponibles</div>
+      <div class="btn-group">
+        <button class="btn btn-blue" onclick="listarCategorias()">Listar Categorías</button>
+      </div>
+      <div id="tabla-categorias" class="table-wrap"></div>
+    </div>
+
+    <!-- CARRITO -->
+    <div id="panel-carrito" class="panel">
+      <div class="panel-title">🛒 Carrito de Compras</div>
+      <div class="panel-subtitle">Productos agregados al carrito para realizar un pedido</div>
+
+      <div style="display:flex; gap:10px; margin-bottom:16px; align-items:center;">
+        <select id="carrito-producto" style="flex:1;">
+          <option value="">-- Seleccionar producto --</option>
+        </select>
+        <input id="carrito-cantidad" type="number" min="1" value="1" style="width:80px;" placeholder="Cant.">
+        <button class="btn btn-primary" onclick="agregarAlCarrito()">+ Agregar</button>
+      </div>
+
+      <div id="carrito-items"></div>
+      <div id="carrito-total" style="display:none;" class="carrito-total"></div>
+      <div class="btn-group" style="margin-top:16px;">
+        <button class="btn btn-danger" onclick="vaciarCarrito()">🗑 Vaciar carrito</button>
+      </div>
+    </div>
+
+    <!-- PEDIDOS -->
+    <div id="panel-pedidos" class="panel">
+      <div class="panel-title">📋 Realizar Pedido</div>
+      <div class="panel-subtitle">POST /api/pedidos — crea un nuevo pedido y descuenta stock</div>
+
+      <div id="alert-pedidos" class="alert"></div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Usuario ID</label>
+          <input id="pedido-usuario" type="number" value="1" placeholder="ID del usuario">
+        </div>
+      </div>
+
+      <label style="display:block; margin-bottom:8px; font-size:0.75rem; color:#8b949e; text-transform:uppercase; letter-spacing:1px;">Productos del pedido</label>
+      <div id="pedido-items">
+        <div class="pedido-item-row">
+          <select class="prod-select"><option value="">-- Producto --</option></select>
+          <input type="number" class="cant-input" min="1" value="1" placeholder="Cant.">
+          <button class="btn btn-danger" onclick="this.parentElement.remove()">✖</button>
+        </div>
+      </div>
+      <div class="btn-group" style="margin-top:10px;">
+        <button class="btn" onclick="agregarFilaPedido()">+ Agregar producto</button>
+        <button class="btn btn-primary" onclick="crearPedido()">✔ Confirmar pedido</button>
+      </div>
+      <div id="pedido-response" class="response-box"></div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div id="panel-historial" class="panel">
+      <div class="panel-title">📜 Historial de Pedidos</div>
+      <div class="panel-subtitle">GET /api/pedidos · GET /api/pedidos/usuario/{id}</div>
+
+      <div style="display:flex; gap:10px; margin-bottom:16px; align-items:center;">
+        <button class="btn btn-blue" onclick="listarTodosPedidos()">Ver todos los pedidos</button>
+        <input id="historial-usuario-id" type="number" placeholder="Usuario ID" style="width:140px;">
+        <button class="btn" onclick="listarPedidosUsuario()">Ver por usuario</button>
+      </div>
+      <div id="tabla-historial" class="table-wrap"></div>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="panel-admin" class="panel">
+      <div class="panel-title">⚙️ Administración</div>
+      <div class="panel-subtitle">Usuarios registrados y control de stock</div>
+      <div class="btn-group">
+        <button class="btn btn-blue" onclick="listarUsuarios()">👤 Listar Usuarios</button>
+        <button class="btn" onclick="listarProductosStock()">📊 Ver Stock de Productos</button>
+      </div>
+      <div id="tabla-admin" class="table-wrap"></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const API = 'http://localhost:8080/api';
+let carrito = [];
+
+// ─── NAVEGACIÓN ─────────────────────────────────────────────
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (name === 'carrito' || name === 'pedidos') cargarSelectProductos();
+}
+
+// ─── UTILS ──────────────────────────────────────────────────
+function showAlert(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = `alert show alert-${type}`;
+  setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+function showResponse(id, data, ok) {
+  const el = document.getElementById(id);
+  el.textContent = JSON.stringify(data, null, 2);
+  el.className = `response-box show ${ok ? 'response-ok' : 'response-err'}`;
+}
+
+async function apiFetch(path, method = 'GET', body = null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, data };
+}
+
+// ─── HOME ───────────────────────────────────────────────────
+async function checkApi() {
+  try {
+    const r = await apiFetch('/productos');
+    showResponse('api-status', { status: r.status, productos: r.data.length + ' encontrados', ok: r.ok }, r.ok);
+  } catch(e) {
+    showResponse('api-status', { error: 'No se pudo conectar con la API', detalle: e.message }, false);
+  }
+}
+
+// ─── PRODUCTOS ──────────────────────────────────────────────
+async function listarProductos() {
+  const r = await apiFetch('/productos');
+  renderTablaProductos(r.data);
+}
+
+async function buscarProductoPorId() {
+  const id = document.getElementById('buscar-id').value;
+  if (!id) return;
+  const r = await apiFetch('/productos/' + id);
+  renderTablaProductos(r.ok ? [r.data] : []);
+  if (!r.ok) showAlert('alert-productos', 'Producto no encontrado', 'error');
+}
+
+async function buscarPorNombre() {
+  const nombre = document.getElementById('buscar-nombre').value;
+  if (!nombre) return;
+  const r = await apiFetch('/productos/buscar?nombre=' + encodeURIComponent(nombre));
+  renderTablaProductos(r.data);
+}
+
+function renderTablaProductos(productos) {
+  const wrap = document.getElementById('tabla-productos');
+  if (!productos || productos.length === 0) {
+    wrap.innerHTML = '<p class="loading">Sin resultados.</p>'; return;
+  }
+  wrap.innerHTML = `<table>
+    <thead><tr>
+      <th>ID</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Categoría</th><th>Acciones</th>
+    </tr></thead>
+    <tbody>
+      ${productos.map(p => `<tr>
+        <td><span class="badge badge-blue">#${p.id}</span></td>
+        <td>${p.nombre}</td>
+        <td><span class="t-green">$${p.precio?.toFixed(2)}</span></td>
+        <td><span class="badge ${p.stock > 10 ? 'badge-green' : p.stock > 0 ? 'badge-yellow' : 'badge-red'}">${p.stock}</span></td>
+        <td>${p.categoria?.nombre || '-'}</td>
+        <td style="display:flex;gap:6px;">
+          <button class="btn" onclick='editarProducto(${JSON.stringify(p)})'>✏️</button>
+          <button class="btn btn-danger" onclick="eliminarProducto(${p.id})">🗑</button>
+        </td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function editarProducto(p) {
+  document.getElementById('prod-id').value = p.id;
+  document.getElementById('prod-nombre').value = p.nombre;
+  document.getElementById('prod-precio').value = p.precio;
+  document.getElementById('prod-descripcion').value = p.descripcion || '';
+  document.getElementById('prod-stock').value = p.stock;
+  document.getElementById('prod-imagen').value = p.imagenUrl || '';
+  document.getElementById('prod-categoria').value = p.categoria?.id || '';
+  document.getElementById('form-productos-titulo').textContent = 'd) Actualizar Producto #' + p.id;
+}
+
+async function guardarProducto() {
+  const id = document.getElementById('prod-id').value;
+  const body = {
+    nombre: document.getElementById('prod-nombre').value,
+    precio: parseFloat(document.getElementById('prod-precio').value),
+    descripcion: document.getElementById('prod-descripcion').value,
+    stock: parseInt(document.getElementById('prod-stock').value),
+    imagenUrl: document.getElementById('prod-imagen').value,
+    categoria: { id: parseInt(document.getElementById('prod-categoria').value) }
+  };
+  const r = id
+    ? await apiFetch('/productos/' + id, 'PUT', body)
+    : await apiFetch('/productos', 'POST', body);
+  if (r.ok) {
+    showAlert('alert-productos', id ? 'Producto actualizado ✔' : 'Producto creado ✔', 'success');
+    limpiarFormProducto();
+    listarProductos();
+  } else {
+    showAlert('alert-productos', 'Error: ' + (r.data.mensaje || r.status), 'error');
+  }
+}
+
+async function eliminarProducto(id) {
+  if (!confirm('¿Eliminar producto #' + id + '?')) return;
+  const r = await apiFetch('/productos/' + id, 'DELETE');
+  if (r.ok) {
+    showAlert('alert-productos', 'Producto eliminado ✔', 'success');
+    listarProductos();
+  } else {
+    showAlert('alert-productos', 'Error al eliminar', 'error');
+  }
+}
+
+function limpiarFormProducto() {
+  ['prod-id','prod-nombre','prod-precio','prod-descripcion','prod-stock','prod-imagen','prod-categoria']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('form-productos-titulo').textContent = 'a) Agregar Producto';
+}
+
+// ─── CATEGORIAS ─────────────────────────────────────────────
+async function listarCategorias() {
+  const r = await apiFetch('/categorias');
+  const wrap = document.getElementById('tabla-categorias');
+  if (!r.data?.length) { wrap.innerHTML = '<p class="loading">Sin categorías.</p>'; return; }
+  wrap.innerHTML = `<table>
+    <thead><tr><th>ID</th><th>Nombre</th><th>Descripción</th></tr></thead>
+    <tbody>${r.data.map(c => `<tr>
+      <td><span class="badge badge-blue">#${c.id}</span></td>
+      <td>${c.nombre}</td>
+      <td>${c.descripcion || '-'}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ─── CARRITO ────────────────────────────────────────────────
+async function cargarSelectProductos() {
+  const r = await apiFetch('/productos');
+  const selects = document.querySelectorAll('.prod-select, #carrito-producto');
+  selects.forEach(sel => {
+    const val = sel.value;
+    sel.innerHTML = '<option value="">-- Producto --</option>' +
+      (r.data || []).map(p => `<option value="${p.id}" data-precio="${p.precio}" data-nombre="${p.nombre}">${p.nombre} — $${p.precio?.toFixed(2)}</option>`).join('');
+    if (val) sel.value = val;
+  });
+}
+
+function agregarAlCarrito() {
+  const sel = document.getElementById('carrito-producto');
+  const cant = parseInt(document.getElementById('carrito-cantidad').value) || 1;
+  const opt = sel.options[sel.selectedIndex];
+  if (!sel.value) return;
+  const idx = carrito.findIndex(i => i.productoId == sel.value);
+  if (idx >= 0) carrito[idx].cantidad += cant;
+  else carrito.push({ productoId: parseInt(sel.value), nombre: opt.dataset.nombre, precio: parseFloat(opt.dataset.precio), cantidad: cant });
+  renderCarrito();
+}
+
+function renderCarrito() {
+  const wrap = document.getElementById('carrito-items');
+  const totalEl = document.getElementById('carrito-total');
+  if (!carrito.length) { wrap.innerHTML = '<p class="loading">El carrito está vacío.</p>'; totalEl.style.display='none'; return; }
+  let total = 0;
+  wrap.innerHTML = carrito.map((item, i) => {
+    const sub = item.precio * item.cantidad;
+    total += sub;
+    return `<div class="carrito-item">
+      <div>
+        <div class="carrito-item-name">${item.nombre}</div>
+        <div class="carrito-item-info">Cantidad: ${item.cantidad} × $${item.precio?.toFixed(2)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="t-green">$${sub.toFixed(2)}</span>
+        <button class="btn btn-danger" onclick="carrito.splice(${i},1);renderCarrito()">✖</button>
+      </div>
+    </div>`;
+  }).join('');
+  totalEl.style.display = 'block';
+  totalEl.textContent = 'Total: $' + total.toFixed(2);
+}
+
+function vaciarCarrito() { carrito = []; renderCarrito(); }
+
+// ─── PEDIDOS ────────────────────────────────────────────────
+function agregarFilaPedido() {
+  const div = document.createElement('div');
+  div.className = 'pedido-item-row';
+  div.innerHTML = `<select class="prod-select"><option value="">-- Producto --</option></select>
+    <input type="number" class="cant-input" min="1" value="1" placeholder="Cant.">
+    <button class="btn btn-danger" onclick="this.parentElement.remove()">✖</button>`;
+  document.getElementById('pedido-items').appendChild(div);
+  cargarSelectProductos();
+}
+
+async function crearPedido() {
+  const usuarioId = parseInt(document.getElementById('pedido-usuario').value);
+  const filas = document.querySelectorAll('.pedido-item-row');
+  const productos = [];
+  filas.forEach(fila => {
+    const pid = parseInt(fila.querySelector('.prod-select').value);
+    const cant = parseInt(fila.querySelector('.cant-input').value);
+    if (pid && cant > 0) productos.push({ productoId: pid, cantidad: cant });
+  });
+  if (!usuarioId || !productos.length) {
+    showAlert('alert-pedidos', 'Completá el usuario y al menos un producto', 'error'); return;
+  }
+  const r = await apiFetch('/pedidos', 'POST', { usuarioId, productos });
+  if (r.ok) {
+    showAlert('alert-pedidos', '¡Pedido creado! Total: $' + r.data.total?.toFixed(2), 'success');
+    showResponse('pedido-response', r.data, true);
+  } else {
+    showAlert('alert-pedidos', r.data.mensaje || 'Error al crear pedido', 'error');
+    showResponse('pedido-response', r.data, false);
+  }
+}
+
+// ─── HISTORIAL ──────────────────────────────────────────────
+async function listarTodosPedidos() {
+  const r = await apiFetch('/pedidos');
+  renderTablaPedidos(r.data);
+}
+
+async function listarPedidosUsuario() {
+  const id = document.getElementById('historial-usuario-id').value;
+  if (!id) return;
+  const r = await apiFetch('/pedidos/usuario/' + id);
+  renderTablaPedidos(r.data);
+}
+
+function renderTablaPedidos(pedidos) {
+  const wrap = document.getElementById('tabla-historial');
+  if (!pedidos?.length) { wrap.innerHTML = '<p class="loading">Sin pedidos.</p>'; return; }
+  wrap.innerHTML = `<table>
+    <thead><tr><th>ID</th><th>Usuario</th><th>Fecha</th><th>Estado</th><th>Total</th><th>Items</th></tr></thead>
+    <tbody>${pedidos.map(p => `<tr>
+      <td><span class="badge badge-blue">#${p.id}</span></td>
+      <td>${p.usuario?.nombre || p.usuario?.id || '-'}</td>
+      <td>${p.fecha ? new Date(p.fecha).toLocaleString('es-AR') : '-'}</td>
+      <td><span class="badge ${p.estado==='PENDIENTE'?'badge-yellow':p.estado==='CONFIRMADO'?'badge-green':'badge-red'}">${p.estado}</span></td>
+      <td><span class="t-green">$${p.total?.toFixed(2)}</span></td>
+      <td>${p.detalles?.length || 0} producto(s)</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ─── ADMIN ──────────────────────────────────────────────────
+async function listarUsuarios() {
+  const r = await apiFetch('/usuarios');
+  const wrap = document.getElementById('tabla-admin');
+  if (!r.data?.length) { wrap.innerHTML = '<p class="loading">Sin usuarios.</p>'; return; }
+  wrap.innerHTML = `<table>
+    <thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Rol</th></tr></thead>
+    <tbody>${r.data.map(u => `<tr>
+      <td><span class="badge badge-blue">#${u.id}</span></td>
+      <td>${u.nombre}</td>
+      <td>${u.email}</td>
+      <td><span class="badge ${u.rol==='ADMIN'?'badge-red':'badge-green'}">${u.rol}</span></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+async function listarProductosStock() {
+  const r = await apiFetch('/productos');
+  const wrap = document.getElementById('tabla-admin');
+  if (!r.data?.length) { wrap.innerHTML = '<p class="loading">Sin productos.</p>'; return; }
+  wrap.innerHTML = `<table>
+    <thead><tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Estado</th></tr></thead>
+    <tbody>${r.data.map(p => `<tr>
+      <td><span class="badge badge-blue">#${p.id}</span></td>
+      <td>${p.nombre}</td>
+      <td>$${p.precio?.toFixed(2)}</td>
+      <td>${p.stock}</td>
+      <td><span class="badge ${p.stock>10?'badge-green':p.stock>0?'badge-yellow':'badge-red'}">
+        ${p.stock>10?'OK':p.stock>0?'Stock bajo':'Sin stock'}
+      </span></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+</script>
+</body>
+</html>
